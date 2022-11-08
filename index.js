@@ -5,16 +5,20 @@ let dogImage = document.createElement('img')
 let dogName = document.createElement('h2')
 let dogButton = document.createElement('button')
 
-
 document.addEventListener("DOMContentLoaded", () =>{
+    reRender()
+})
+
+function reRender() {
     fetch('http://localhost:3000/pups')
     .then((response) => response.json())
     .then((object) => {
-        populateDogInfo(object[0])
+        while (dogNavBarDiv.firstChild) {
+            dogNavBarDiv.removeChild(dogNavBarDiv.firstChild)
+        }
         object.forEach(renderNavBar)
-        console.log(object[0])
     })
-})
+}
 
 function renderNavBar(object){
     let dogSpan = document.createElement("span")
@@ -22,6 +26,8 @@ function renderNavBar(object){
     dogSpan.addEventListener("click", () => {populateDogInfo(object)})
     dogNavBarDiv.append(dogSpan)
 }
+
+let dogId
 
 function populateDogInfo(object){
     dogImage.src = object.image
@@ -31,13 +37,16 @@ function populateDogInfo(object){
     dogButton.addEventListener("click", () => {buttonToggle(object)})
     dogButton.innerText = object.isGoodDog ? "Good dog!" : "Bad dog :("
     dogInfoDiv.appendChild(dogButton)
+    dogId = object.id
 }
 
 function buttonToggle(object){
-    fetch(`http://localhost:3000/pups/${object.id}`, {
+    fetch(`http://localhost:3000/pups/${dogId}`, {
         method: 'PATCH',
         body: JSON.stringify({
-            isGoodDog: object.isGoodDog
+            // this is the actual PATCH
+            // left is the key, right is what we want the value to
+            isGoodDog: dogButton.innerText === "Good dog!" ? false : true
         }),
         headers: {
             'Content-Type': 'application/json',
@@ -46,10 +55,9 @@ function buttonToggle(object){
        })
        .then (response => response.json())
        .then ((data) => {
-            console.log(`before flip: ${object.isGoodDog}`)
-            // THE PATCH ISNT GOING THROUGH
-            data.isGoodDog = !data.isGoodDog
-            console.log(`after flip: ${object.isGoodDog}`)
+        // this is the RESPONSE not the PATCH
+        dogButton.innerText = data.isGoodDog ? "Good dog!" : "Bad dog :("
+        reRender()
     }) 
 }
 
